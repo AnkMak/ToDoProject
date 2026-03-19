@@ -98,18 +98,3 @@ export const SHADOWS = {
   },
 };
 
-// 分類標籤對照
-export const CATEGORY_LABELS = {
-  personal: '個人',
-  work: '工作',
-  shopping: '購物',
-  other: '其他',
-};
-
-// 分類圖示（Emoji）
-export const CATEGORY_ICONS = {
-  personal: '👤',
-  work: '💼',
-  shopping: '🛒',
-  other: '📌',
-};

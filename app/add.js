@@ -23,14 +23,10 @@ import {
   SPACING,
   RADIUS,
   SHADOWS,
-  CATEGORY_LABELS,
-  CATEGORY_ICONS,
 } from '../constants/theme';
 import { getAllTodos, addTodo, updateTodo } from '../storage/todoStorage';
+import { getCategories } from '../storage/categoryStorage';
 import { generateId } from '../utils/helpers';
-
-// 所有分類選項
-const CATEGORIES = ['personal', 'work', 'shopping', 'other'];
 
 export default function AddScreen() {
   const router = useRouter();
@@ -38,8 +34,21 @@ export default function AddScreen() {
   const isEditMode = !!id;
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('personal');
+  const [category, setCategory] = useState(''); // 延後至選單載入完成設預設值
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // 載入分類
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const cats = await getCategories();
+      setCategories(cats);
+      if (!isEditMode && cats.length > 0) {
+        setCategory(cats[0].id);
+      }
+    };
+    fetchCategories();
+  }, [isEditMode]);
 
   // 編輯模式：載入並預填現有資料
   useEffect(() => {
@@ -150,12 +159,12 @@ export default function AddScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>分類</Text>
             <View style={styles.categoryGrid}>
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat;
-                const color = COLORS.categories[cat];
+              {categories.map((cat) => {
+                const isSelected = category === cat.id;
+                const color = cat.color;
                 return (
                   <TouchableOpacity
-                    key={cat}
+                    key={cat.id}
                     style={[
                       styles.categoryCard,
                       isSelected && {
@@ -163,11 +172,11 @@ export default function AddScreen() {
                         backgroundColor: color + '15',
                       },
                     ]}
-                    onPress={() => setCategory(cat)}
+                    onPress={() => setCategory(cat.id)}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.categoryIcon}>
-                      {CATEGORY_ICONS[cat]}
+                      {cat.icon}
                     </Text>
                     <Text
                       style={[
@@ -175,7 +184,7 @@ export default function AddScreen() {
                         isSelected && { color },
                       ]}
                     >
-                      {CATEGORY_LABELS[cat]}
+                      {cat.label}
                     </Text>
 
                     {/* 選中指示器 */}

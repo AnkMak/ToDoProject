@@ -5,27 +5,27 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONT_SIZES, SPACING, RADIUS, CATEGORY_LABELS, CATEGORY_ICONS } from '../constants/theme';
 
-export default function CategoryBadge({ category, size = 'sm' }) {
-  // 取得該分類對應的顏色
-  const color = COLORS.categories[category] || COLORS.categories.other;
-  const label = CATEGORY_LABELS[category] || '其他';
-  const icon = CATEGORY_ICONS[category] || '📌';
+export default function CategoryBadge({ category, color, icon, label, size = 'sm' }) {
+  // 防呆設定：若未傳入對應資料，提供預設值
+  const badgeColor = color || COLORS.categories?.other || '#E17055';
+  const badgeLabel = label || category?.label || '其他';
+  const badgeIcon = icon || category?.icon || '📌';
 
   const isSmall = size === 'sm';
 
   return (
     <View style={[
       styles.badge,
-      { backgroundColor: color + '20' }, // 20% 不透明度背景
+      { backgroundColor: badgeColor + '20' }, // 20% 不透明度背景
       isSmall ? styles.badgeSmall : styles.badgeLarge,
     ]}>
-      <Text style={[styles.icon, isSmall && styles.iconSmall]}>{icon}</Text>
+      <Text style={[styles.icon, isSmall && styles.iconSmall]}>{badgeIcon}</Text>
       <Text style={[
         styles.label,
-        { color },
+        { color: badgeColor },
         isSmall ? styles.labelSmall : styles.labelLarge,
       ]}>
-        {label}
+        {badgeLabel}
       </Text>
     </View>
   );

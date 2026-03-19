@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { COLORS } from '../constants/theme';
+import CelebrationEffect from '../components/CelebrationEffect';
 
 export default function RootLayout() {
   return (
@@ -25,6 +26,9 @@ export default function RootLayout() {
         {/* 首頁禁用 iOS 返回手勢，防止與 PagerView 水平滑動衝突 */}
         <Stack.Screen name="index" options={{ gestureEnabled: false }} />
       </Stack>
+
+      {/* 全域煙火慶祝動畫 */}
+      <CelebrationEffect />
     </GestureHandlerRootView>
   );
 }

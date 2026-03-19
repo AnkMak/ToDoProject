@@ -22,26 +22,34 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONT_SIZES, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllTodos, updateTodo, deleteTodo, saveTodos } from '../storage/todoStorage';
+import { getCategories } from '../storage/categoryStorage';
 import TodoItem from '../components/TodoItem';
 import EmptyState from '../components/EmptyState';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-// 篩選標籤列資料
-const FILTER_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'personal', label: '👤 個人' },
-  { key: 'work', label: '💼 工作' },
-  { key: 'shopping', label: '🛒 購物' },
-  { key: 'other', label: '📌 其他' },
-  { key: 'completed', label: '✅ 已完成' },
-];
-
 export default function HomeScreen() {
   const router = useRouter();
   const [todos, setTodos] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // 動態組裝篩選標籤列資料
+  const filterTabs = useMemo(() => {
+    const defaultTabs = [
+      { key: 'all', label: '全部' },
+    ];
+    const categoryTabs = categories.map(cat => ({
+      key: cat.id,
+      label: `${cat.icon} ${cat.label}`
+    }));
+    return [
+      ...defaultTabs,
+      ...categoryTabs,
+      { key: 'completed', label: '✅ 已完成' }
+    ];
+  }, [categories]);
 
   // 記住當前頁面索引，用於模式切換間同步
   const currentPageRef = useRef(0);
@@ -52,15 +60,19 @@ export default function HomeScreen() {
   const filterListRef = useRef(null);
 
   // 載入資料
-  const loadTodos = useCallback(async () => {
-    const data = await getAllTodos();
-    setTodos(data);
+  const loadData = useCallback(async () => {
+    const [todosData, catsData] = await Promise.all([
+      getAllTodos(),
+      getCategories()
+    ]);
+    setTodos(todosData);
+    setCategories(catsData);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadTodos();
-    }, [loadTodos])
+      loadData();
+    }, [loadData])
   );
 
   // 切換完成狀態
@@ -84,8 +96,6 @@ export default function HomeScreen() {
 
   // 拖拉排序結束 → 儲存新順序（編輯模式）
   const handleDragEnd = useCallback(async ({ data: newData }) => {
-    // 泛型排序映射邏輯：不管是在哪個過濾條件下排序，
-    // 原地取代 todos 中對應元素的順序，不影響其他隱藏項目的相對位置。
     const merged = [...todos];
     const indicesToReplace = [];
     const newDataIds = new Set(newData.map(item => item.id));
@@ -107,7 +117,9 @@ export default function HomeScreen() {
   // Carousel 頁面切換回調
   const handlePageSelected = useCallback((index) => {
     currentPageRef.current = index;
-    setSelectedFilter(FILTER_TABS[index].key);
+    if (filterTabs[index]) {
+      setSelectedFilter(filterTabs[index].key);
+    }
 
     try {
       filterListRef.current?.scrollToIndex({
@@ -116,18 +128,17 @@ export default function HomeScreen() {
         viewPosition: 0.5,
       });
     } catch (_) {}
-  }, []);
+  }, [filterTabs]);
 
   // 點擊篩選標籤
   const handleFilterPress = useCallback((tabKey) => {
-    const index = FILTER_TABS.findIndex((t) => t.key === tabKey);
+    const index = filterTabs.findIndex((t) => t.key === tabKey);
     if (index < 0) return;
 
     currentPageRef.current = index;
     setSelectedFilter(tabKey);
 
     if (!isEditMode) {
-      // 瀏覽模式：用 Carousel 滑動到對應頁面
       carouselRef.current?.scrollTo({ index, animated: true });
     }
 
@@ -138,7 +149,7 @@ export default function HomeScreen() {
         viewPosition: 0.5,
       });
     } catch (_) {}
-  }, [isEditMode]);
+  }, [isEditMode, filterTabs]);
 
   // 切換模式
   const toggleEditMode = useCallback(() => {
@@ -176,23 +187,33 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* 編輯 / 完成 按鈕 */}
-          <TouchableOpacity
-            style={[styles.editButton, isEditMode && styles.editButtonActive]}
-            onPress={toggleEditMode}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.editButtonText, isEditMode && styles.editButtonTextActive]}>
-              {isEditMode ? '完成' : '編輯'}
-            </Text>
-          </TouchableOpacity>
+          {/* 右側按鈕群組：管理分類 / 編輯 */}
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/categories')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionButtonText}>≡ 分類</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.editButton, isEditMode && styles.editButtonActive]}
+              onPress={toggleEditMode}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.editButtonText, isEditMode && styles.editButtonTextActive]}>
+                {isEditMode ? '完成' : '編輯'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 分類篩選標籤列 */}
         <View style={styles.filterContainer}>
           <FlatList
             ref={filterListRef}
-            data={FILTER_TABS}
+            data={filterTabs}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.key}
@@ -220,16 +241,17 @@ export default function HomeScreen() {
         </View>
 
         {/* ====== 瀏覽模式：Carousel + FlatList ====== */}
-        {!isEditMode && (
+        {!isEditMode && filterTabs.length > 0 && (
           <View style={styles.pager}>
             <Carousel
               ref={carouselRef}
               loop={false}
               width={SCREEN_WIDTH}
               height={'100%'}
-              data={FILTER_TABS}
+              data={filterTabs}
               defaultIndex={currentPageRef.current}
               onSnapToItem={handlePageSelected}
+              scrollAnimationDuration={200}
               panGestureHandlerProps={{
                 activeOffsetX: [-10, 10],
                 failOffsetY: [-15, 15],
@@ -258,6 +280,7 @@ export default function HomeScreen() {
                         renderItem={({ item }) => (
                           <TodoItem
                             todo={item}
+                            categories={categories}
                             onToggle={handleToggle}
                             isEditMode={false}
                           />
@@ -286,6 +309,7 @@ export default function HomeScreen() {
                 renderItem={({ item, drag, isActive }) => (
                   <TodoItem
                     todo={item}
+                    categories={categories}
                     onToggle={handleToggle}
                     onDelete={handleDelete}
                     onPress={handlePress}
@@ -339,6 +363,24 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
     marginTop: SPACING.xs,
+  },
+  // 右側按鈕群組
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  // 管理分類按鈕
+  actionButton: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surfaceExtralight || 'rgba(255,255,255,0.05)',
+  },
+  actionButtonText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
   },
   // 編輯 / 完成 按鈕
   editButton: {
