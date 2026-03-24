@@ -10,6 +10,7 @@
 
 ---
 
+<a id="中文版本"></a>
 ## 🇹🇼 中文版本
 
 這是一個以流暢手勢與豐富動畫回饋為主的跨平台 To-Do 應用。我們不只關注幫助你紀錄代辦，更希望能讓你在點擊「完成」的那一刻，實質地感受到成就感與情緒價值。
@@ -56,6 +57,7 @@
 
 ---
 
+<a id="english-version"></a>
 ## 🇺🇸 English Version
 
 > A high-quality React Native (Expo) To-Do application focusing on details, smooth gestures, and delivering emotional value to its users.
