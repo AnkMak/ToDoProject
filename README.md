@@ -4,7 +4,9 @@
 
 > 一個注重細節與使用者情緒價值的高質感 React Native (Expo) 待辦事項應用程式。
 
-![App Banner](./assets/banner.png) <!-- 請將 banner 截圖替換至此 -->
+<div align="center">
+  <img src="./assets/banner.png" width="250" alt="App Banner" />
+</div>
 
 ---
 
