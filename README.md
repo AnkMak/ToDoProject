@@ -1,6 +1,6 @@
 # 📝 To-Do Project (待辦事項工具)
 
-[English Version](#english-version) | [中文版本](#中文版本)
+[English](#english-version) | [中文](#中文版本)
 
 > 一個注重細節與使用者情緒價值的高質感 React Native (Expo) 待辦事項應用程式。
 
@@ -24,7 +24,6 @@
 * 💾 **本機安全儲存**：目前階段採用 `AsyncStorage` 進行資料的純本機儲存，極快且不需網路連線。
 
 ### 📸 畫面預覽
-*(請將您的實際應用程式畫面截圖存放到 `./assets` 資料夾中並替換以下圖片連結)*
 
 | 📱 首頁佈局與分類 | ✍️ 新增/編輯待辦 | 🎉 全螢幕慶祝動畫 |
 | :---: | :---: | :---: |
@@ -73,7 +72,6 @@ This is a cross-platform To-Do app centered around fluid gestures and rich anima
 * 💾 **Secure Local Storage**: Data is saved instantly and securely to your device offline using `AsyncStorage`.
 
 ### 📸 Screenshots
-*(Please save your actual app screenshots to the `./assets` folder and replace the image links below)*
 
 | 📱 Home Layout | ✍️ Add/Edit Task | 🎉 Celebration Effect |
 | :---: | :---: | :---: |
